@@ -101,7 +101,7 @@ def start_game():
                     game_over = True
 
             if game_over:
-                cv2.putText(frame, "Press 'r' to restart or 'q' to quit", (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                cv2.putText(frame, "", (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 cv2.imshow("Gesture Game", frame)
                 key = cv2.waitKey(0)  # Wait for a key press
                 if key == ord('r'):
@@ -111,7 +111,6 @@ def start_game():
 
 
             else:
-                cv2.putText(frame, "Target: " + gesture_sequence[current_gesture_index], (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 cv2.putText(frame, "Time Remaining: " + str(max(0, int(total_game_time - (time.time() - start_time)))), (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
             cv2.imshow("Gesture Game", frame)
