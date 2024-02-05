@@ -18,18 +18,13 @@ filtered_classNames = [gesture for gesture in classNames if gesture.lower() in [
 
 # Initialize MediaPipe and webcam
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(max_num_hands=1, min_detection_confidence=0.7)
+hands = mpHands.Hands(max_num_hands=1, min_detection_confidence=0.5)
 mpDraw = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
-
-# Set frame width and height
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
 # Define game parameters
 total_game_time = 30  # Total time for the entire game in seconds
 
-# Map gesture class names to image file paths
 gesture_images = {
     "thumbs up": "C:\\Users\\Admin\\Desktop\\hand_gesture_test\\mp_hand_gesture\\thumbs up.jpg",
     "thumbs down": "C:\\Users\\Admin\\Desktop\\hand_gesture_test\\mp_hand_gesture\\thumbs down.jpg",
@@ -38,32 +33,50 @@ gesture_images = {
     "stop": "C:\\Users\\Admin\\Desktop\\hand_gesture_test\\mp_hand_gesture\\stop.jpg",
 }
 
+
 def generate_gesture_sequence(length):
-    """Generates a random gesture sequence."""
+    """Generates a random sequence of distinct gestures from the filtered list."""
     return random.sample(filtered_classNames, length)
 
-def display_gesture_images(gesture_sequence):
-    """Displays gesture images for the user to mimic."""
-    for gesture in gesture_sequence:
-        image = cv2.imread(gesture_images[gesture])
-        image = cv2.resize(image, (640, 360))  # Resize image to fit screen
-        cv2.imshow("Gesture to Mimic", image)
-        cv2.waitKey(2000)  # Display each image for 2 seconds
+def display_gesture_images(gesture_sequence, display_duration=1000, resize_factor=2.5):
+    """Displays gesture images for the user to mimic before starting the game."""
+    for gesture_name in gesture_sequence:
+        image_path = gesture_images[gesture_name]  # Get the file path for the gesture_name
+        print(f"Attempting to read image: {image_path}")
+
+        gesture_image = cv2.imread(image_path)
+
+        if gesture_image is None:
+            print(f"Failed to read image: {image_path}")
+            continue
+
+        # Resize the image
+        height, width, _ = gesture_image.shape
+        new_height = int(height * resize_factor)
+        new_width = int(width * resize_factor)
+        resized_image = cv2.resize(gesture_image, (new_width, new_height))
+
+        cv2.imshow("Mimic the Gesture", resized_image)
+        cv2.waitKey(display_duration)  # Display each image for the specified duration
         cv2.destroyAllWindows()
 
+
 def start_game():
-    """Begins the game loop, tracking player gestures and scores."""
     while True:
-        gesture_sequence = generate_gesture_sequence(5)  # Generate a sequence of 5 gestures
+        gesture_sequence = generate_gesture_sequence(4)  # Generate a sequence of 5 gestures
         display_gesture_images(gesture_sequence)  # Display gesture images before starting the game
         time.sleep(1)  # Add a short delay before starting the game
         current_gesture_index = 0
         start_time = time.time()
         game_over = False
+        cv2.namedWindow("Gesture Game", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("Gesture Game", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
         while True:
             success, frame = cap.read()
             frame = cv2.flip(frame, 1)
             framergb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            cv2.putText(frame, "Current Index = "+str(current_gesture_index), (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
             result = hands.process(framergb)
             className = ''
@@ -89,7 +102,7 @@ def start_game():
 
             # Check for game completion or timeout
             if current_gesture_index == len(gesture_sequence) and not game_over:
-                cv2.putText(frame, "Congratulations! Sequence Completed!", (10, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                cv2.putText(frame, "Congratulations! You can proceed to the next level!", (10, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 game_over = True
 
             if time.time() - start_time > total_game_time:
@@ -107,7 +120,6 @@ def start_game():
                     break  # Exit the game
 
             else:
-                cv2.putText(frame, "Target: " + gesture_sequence[current_gesture_index], (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 cv2.putText(frame, "Time Remaining: " + str(max(0, int(total_game_time - (time.time() - start_time)))), (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
             cv2.imshow("Gesture Game", frame)
@@ -123,5 +135,5 @@ def start_game():
     cap.release()
     cv2.destroyAllWindows()
 
-# Start the game
+# Start a single game
 start_game()
