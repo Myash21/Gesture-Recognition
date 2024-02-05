@@ -22,6 +22,10 @@ hands = mpHands.Hands(max_num_hands=1, min_detection_confidence=0.7)
 mpDraw = mp.solutions.drawing_utils
 cap = cv2.VideoCapture(0)
 
+# Set frame width and height
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
 # Define game parameters
 total_game_time = 30  # Total time for the entire game in seconds
 
@@ -34,22 +38,15 @@ gesture_images = {
     "stop": "C:\\Users\\Admin\\Desktop\\hand_gesture_test\\mp_hand_gesture\\stop.jpg",
 }
 
-def get_screen_resolution():
-    """Get the screen resolution using OpenCV."""
-    screen_width = int(cap.get(3))  # Width
-    screen_height = int(cap.get(4))  # Height
-    return screen_width, screen_height
-
 def generate_gesture_sequence(length):
     """Generates a random gesture sequence."""
     return random.sample(filtered_classNames, length)
 
 def display_gesture_images(gesture_sequence):
     """Displays gesture images for the user to mimic."""
-    screen_width, screen_height = get_screen_resolution()
     for gesture in gesture_sequence:
         image = cv2.imread(gesture_images[gesture])
-        image = cv2.resize(image, (screen_width // 2, screen_height // 2))  # Resize image to fit screen
+        image = cv2.resize(image, (640, 360))  # Resize image to fit screen
         cv2.imshow("Gesture to Mimic", image)
         cv2.waitKey(2000)  # Display each image for 2 seconds
         cv2.destroyAllWindows()
@@ -101,7 +98,7 @@ def start_game():
                     game_over = True
 
             if game_over:
-                cv2.putText(frame, "", (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                cv2.putText(frame, "Press 'r' to restart or 'q' to quit", (10, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 cv2.imshow("Gesture Game", frame)
                 key = cv2.waitKey(0)  # Wait for a key press
                 if key == ord('r'):
@@ -109,8 +106,8 @@ def start_game():
                 elif key == ord('q'):
                     break  # Exit the game
 
-
             else:
+                cv2.putText(frame, "Target: " + gesture_sequence[current_gesture_index], (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 cv2.putText(frame, "Time Remaining: " + str(max(0, int(total_game_time - (time.time() - start_time)))), (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
             cv2.imshow("Gesture Game", frame)
